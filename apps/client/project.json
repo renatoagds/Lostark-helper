@@ -107,8 +107,8 @@
         "prerender": false,
         "ssr": false,
         "browserTarget": "client:build:production",
-        "firebaseProject": "lostark-helper-8dfb0",
-        "firebaseHostingSite": "lostark-helper-8dfb0"
+        "firebaseProject": "lost-ark-helper-f2c60",
+        "firebaseHostingSite": "lost-ark-helper-f2c60"
       }
     }
   },
