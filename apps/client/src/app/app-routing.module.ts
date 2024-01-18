@@ -2,7 +2,8 @@ import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 
 const routes: Routes = [
-  { path: "", loadChildren: () => import("./pages/home/home.module").then(m => m.HomeModule) },
+  { path: "", redirectTo: "/dashboard", pathMatch: "full" },
+  { path: "dashboard", loadChildren: () => import("./pages/home/home.module").then(m => m.HomeModule) },
   { path: "checklist", loadChildren: () => import("./pages/checklist/checklist.module").then(m => m.ChecklistModule) },
   { path: "roster", loadChildren: () => import("./pages/roster/roster.module").then(m => m.RosterModule) },
   { path: "tasks-manager", loadChildren: () => import("./pages/tasks/tasks.module").then(m => m.TasksModule) },

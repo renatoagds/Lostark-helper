@@ -16,7 +16,6 @@ import { Pirsch } from "pirsch-sdk/web";
 @Component({
   selector: "lostark-helper-root",
   templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.less"]
 })
 export class AppComponent implements OnInit {
   isCollapsed = localStorage.getItem("sidebar:collapsed") === "true";
@@ -32,9 +31,9 @@ export class AppComponent implements OnInit {
       };
     });
 
-  public user$ = this.userService.user$;
-
   public anonymous$ = this.auth.isAnonymous$;
+
+  public user$ = this.userService.user$;
 
   constructor(private userService: UserService,
               private auth: AuthService,
