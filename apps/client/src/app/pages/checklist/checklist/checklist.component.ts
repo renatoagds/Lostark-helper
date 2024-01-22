@@ -17,7 +17,7 @@ import { Roster } from "../../../model/roster";
 import { LocalStorageBehaviorSubject } from "../../../core/local-storage-behavior-subject";
 import { Character } from "../../../model/character/character";
 import { tickets } from "../../../data/tickets";
-import { addWeeks, getWeek } from "date-fns";
+import { addWeeks, getWeek, formatDistanceToNowStrict } from "date-fns";
 
 export interface TaskCharacter extends Character {
   done?: boolean;
@@ -37,13 +37,9 @@ export class ChecklistComponent {
   public forceShowHiddenCharacter$ = new BehaviorSubject(false);
 
   public categoriesDisplay$ = new LocalStorageBehaviorSubject<{
-    dailyCharacter: boolean,
-    weeklyCharacter: boolean,
-    biWeeklyCharacter: boolean,
-    dailyRoster: boolean,
-    weeklyRoster: boolean,
-    biWeeklyRoster: boolean,
-  }>("checklist:displayed", { dailyCharacter: true, weeklyCharacter: true, biWeeklyCharacter: true, dailyRoster: true, weeklyRoster: true, biWeeklyRoster: true });
+    daily: boolean,
+    weekly: boolean,
+  }>("checklist:displayed", { daily: true, weekly: true });
 
   public roster$: Observable<Character[]> = this.rawRoster$.pipe(
     pluck("characters")
@@ -74,18 +70,36 @@ export class ChecklistComponent {
   public lastBiWeeklyReset$ = this.timeService.lastBiWeeklyReset$;
 
   public nextDailyReset$ = this.lastDailyReset$.pipe(
-    map(reset => reset + 86400000)
+    map(reset => {
+      const utc = reset + 86400000
+      const date = new Date(utc);
+      return {
+        utc,
+        date: formatDistanceToNowStrict(date)
+      }
+    })
   );
 
   public nextWeeklyReset$ = this.lastWeeklyReset$.pipe(
-    map(reset => reset + 86400000 * 7)
+    map(reset => {
+      const utc = reset + 86400000 * 7
+      const date = new Date(utc);
+      return {
+        utc,
+        date: formatDistanceToNowStrict(date)
+      }
+    })
   );
 
   public nextBiWeeklyReset$ = this.lastBiWeeklyReset$.pipe(
     map(reset => {
       const date = new Date(reset);
       // If we're on an odd week, it means that reset is in two weeks, else it's next week
-      return addWeeks(reset, getWeek(date) % 2 === 1 ? 2 : 1).getTime();
+      const utc = addWeeks(reset, getWeek(date) % 2 === 1 ? 2 : 1).getTime();
+      return {
+        utc,
+        date: formatDistanceToNowStrict(new Date(utc))
+      }
     })
   );
 
@@ -268,9 +282,8 @@ export class ChecklistComponent {
     friend.showCharacters = !friend.showCharacters;
   }
 
-  public ticketsTrackingOpenedChange(opened: boolean): void {
-    localStorage.setItem("checklist:tickets-opened", opened.toString());
-    this.ticketsTrackingOpened = opened;
+  public ticketsTrackingOpenedChange(): void {
+    localStorage.setItem("checklist:tickets-opened", this.ticketsTrackingOpened.toString());
   }
 
   public markAsDone(completion: Completion, energy: Energy, character: Character, task: LostarkTask, roster: Character[], done: boolean, dailyReset: number, weeklyReset: number, biWeeklyReset: number, clickEvent?: MouseEvent): void {
@@ -333,6 +346,3 @@ export class ChecklistComponent {
     this.rosterService.setOne(roster.$key, roster);
   }
 }
-
-
-
