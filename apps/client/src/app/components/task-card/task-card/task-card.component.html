@@ -1,0 +1,14 @@
+<div
+class="card card-side card-bordered bg-neutral text-neutral-content shadow-xl"
+[class.bg-success]="done"
+[class.text-success-content]="done">
+  <div class="inline-flex justify-start items-center" [class]="class">
+    <figure class="p-2 xl:p-1">
+      <img *ngIf="icon" src="./assets/icons/{{icon}}" alt="" class="w-6 xl:w-10">
+    </figure>
+    <p class="font-semibold text-sm">{{label}}</p>
+  </div>
+  <div class="py-1 px-4 flex justify-end items-center flex-1 gap-2">
+    <ng-content></ng-content>
+  </div>
+</div>
