@@ -26,7 +26,6 @@ export interface TaskCharacter extends Character {
 @Component({
   selector: "lostark-helper-checklist",
   templateUrl: "./checklist.component.html",
-  styleUrls: ["./checklist.component.less"]
 })
 export class ChecklistComponent {
 

@@ -1,11 +1,12 @@
  <div class="w-full">
   <ng-container *ngIf="roster$ | async as roster">
-    <div class="fullpage-message" *ngIf="roster.length === 0">
-      <!-- TODO -->
-      <!-- No characters in your roster, please add some in the roster page
+    <div class="flex items-center flex-col gap-5 mt-10 text-4xl text-center" *ngIf="roster.length === 0">
+      No characters in your roster, please add some in the roster page
       <br>
-      <a nz-button nzType="primary" routerLink="/roster">Click here to navigate to the roster manager and add your first
-        character</a> -->
+      <a class="btn btn-lg" routerLink="/roster">
+        Click here to navigate to the roster manager and add your first
+        character
+      </a>
     </div>
     <ng-container *ngIf="roster.length > 0">
       <ng-container *ngIf="completion$ | async as completion">
