@@ -37,10 +37,10 @@ export class RegisterPopupComponent {
 
   submit(): void {
     const creds = this.form.getRawValue();
-    this.auth.register(creds.email, creds.password)
+    this.auth.register(creds.email ?? '', creds.password ?? '')
       .pipe(
         switchMap((res) => {
-          return this.userService.setOne(res.user.uid, { name: creds.username, friends: [], region: LostarkRegion.EUROPE_CENTRAL });
+          return this.userService.setOne(res.user.uid, { name: creds.username ?? '', friends: [], region: LostarkRegion.EUROPE_CENTRAL });
         })
       )
       .subscribe(() => {

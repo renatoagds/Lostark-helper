@@ -41,7 +41,7 @@ export class GearsetCreationPopupComponent {
       stats: []
     };
     const gearset: Partial<Gearset> = {
-      name: raw.name,
+      name: raw.name ?? '',
 
       currentIlvl: 1302,
       targetIlvl: 1302,

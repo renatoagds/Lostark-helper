@@ -5,8 +5,8 @@ const routes: Routes = [
   { path: "", redirectTo: "/dashboard", pathMatch: "full" },
   { path: "dashboard", loadChildren: () => import("./pages/home/home.module").then(m => m.HomeModule) },
   { path: "checklist", loadChildren: () => import("./pages/checklist/checklist.module").then(m => m.ChecklistModule) },
-  { path: "roster", loadChildren: () => import("./pages/roster/roster.module").then(m => m.RosterModule) },
-  { path: "tasks-manager", loadChildren: () => import("./pages/tasks/tasks.module").then(m => m.TasksModule) },
+  // { path: "roster", loadChildren: () => import("./pages/roster/roster.module").then(m => m.RosterModule) },
+  // { path: "tasks-manager", loadChildren: () => import("./pages/tasks/tasks.module").then(m => m.TasksModule) },
   {
     path: "gold-planner",
     loadChildren: () => import("./pages/gold-planner/gold-planner.module").then(m => m.GoldPlannerModule)

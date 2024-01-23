@@ -21,14 +21,14 @@ export class LoginPopupComponent {
 
   public sendResetPassword(): void {
     const email = this.form.getRawValue().email;
-    this.auth.sendResetPassword(email);
+    this.auth.sendResetPassword(email ?? '');
     this.message.success("Reset password email sent");
     this.modalRef.close();
   }
 
   login(): void {
     const creds = this.form.getRawValue();
-    this.auth.login(creds.email, creds.password)
+    this.auth.login(creds.email ?? '', creds.password ?? '')
       .subscribe(() => {
         this.modalRef.close();
       });

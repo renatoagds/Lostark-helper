@@ -52,11 +52,11 @@ export class FriendsComponent {
       this.message.error(`User with ID ${form.uid} is in your pending invites.`);
       return;
     }
-    if (friendIds.includes(form.uid)) {
+    if (friendIds.includes(form.uid ?? '')) {
       this.message.error(`User with ID ${form.uid} is already your friend.`);
       return;
     }
-    this.userService.getOne(form.uid).pipe(
+    this.userService.getOne(form.uid ?? '').pipe(
       first(),
       switchMap(user => {
         if (user.notFound) {
@@ -64,7 +64,7 @@ export class FriendsComponent {
         }
         return this.friendInvitesService.addOne({
           from: uid,
-          to: form.uid,
+          to: form.uid ?? '',
           date: Date.now()
         }).pipe(
           mapTo(user.name)
