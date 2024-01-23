@@ -1,0 +1,330 @@
+<!-- <ng-container *ngIf="roster$ | async as roster">
+  <nz-page-header nzTitle="Roster manager" nzSubtitle="Manage & configure your roster">
+    <nz-page-header-extra>
+      <button nz-button
+              *ngIf="hasLocalstorageRoster"
+              nzType="primary"
+              nz-popconfirm
+              nzPopconfirmTitle="This will overwrite your current roster with previously saved local data and clear it from localstorage !"
+              (nzOnConfirm)="importFromLocalStorage(roster.$key)">
+        Import from LocalStorage
+      </button>
+      <button nz-button (click)="exportRoster(roster)" nz-tooltip nzTooltipTitle="Export roster">
+        <i nz-icon nzType="upload" nzTheme="outline"></i>
+      </button>
+      <button nz-button (click)="importRoster()" nz-tooltip nzTooltipTitle="Import roster">
+        <i nz-icon nzType="download" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-card nzTitle="Characters">
+    <nz-list [nzDataSource]="roster.characters" cdkDropList [cdkDropListData]="roster.characters" (cdkDropListDropped)="drop(roster, $event)">
+      <nz-list-item *ngFor="let character of roster.characters;trackBy: trackByCharacter"
+                    [nzContent]="noteEditor"
+                    [nzActions]="[setPrivateAction, setLazyAction, setHideAction,setWeeklyGoldAction, setClassAction, deleteAction]"
+                    cdkDrag [cdkDragData]="character">
+        <ng-template #noteEditor>
+          <div class="note-editor">
+          <textarea nz-input
+                    placeholder="Custom note, you also can use it to set your BiFrost information or song of return location"
+                    cols="50"
+                    rows="3"
+                    [(ngModel)]="character.note"
+                    [ngModelOptions]="{updateOn: 'blur'}"
+                    (ngModelChange)="saveCharacter(character, roster)"></textarea>
+          </div>
+        </ng-template>
+
+        <nz-list-item-meta [nzTitle]="title" [nzDescription]="description" class="character-meta"
+                           nzAvatar="./assets/icons/classes/class_{{character.class?.toString()?.padStart(2,'0')}}.png"></nz-list-item-meta>
+        <ng-template #title>
+          <input type="text" nz-input [ngModel]="character.name" [ngModelOptions]="{updateOn: 'blur'}" (ngModelChange)="saveCharacterName(character, roster, $event)" class="character-name-input">
+        </ng-template>
+        <ng-template #description>
+          ilvl
+          <nz-input-number [(ngModel)]="character.ilvl" [ngModelOptions]="{updateOn: 'blur'}"
+                           (ngModelChange)="saveCharacter(character, roster)"></nz-input-number>
+        </ng-template>
+        <ng-template #setWeeklyGoldAction>
+          <label nz-checkbox [(ngModel)]="character.weeklyGold" (ngModelChange)="saveCharacter(character, roster)"></label>
+          Weekly Gold
+          <i nz-icon nzType="info-circle" nzTheme="outline" nz-tooltip nzTooltipTitle="Enable weekly gold for this character"></i>
+        </ng-template>
+        <ng-template #setPrivateAction>
+          <label nz-checkbox [(ngModel)]="character.isPrivate" (ngModelChange)="saveCharacter(character, roster)"></label>
+          Private
+          <i nz-icon nzType="info-circle" nzTheme="outline" nz-tooltip nzTooltipTitle="Do not share this character with your friends"></i>
+        </ng-template>
+        <ng-template #setHideAction>
+          <label nz-checkbox [(ngModel)]="character.isHide" (ngModelChange)="saveCharacter(character, roster)"></label>
+          Hide
+          <i nz-icon nzType="info-circle" nzTheme="outline" nz-tooltip nzTooltipTitle="Hide character from the checklist"></i>
+        </ng-template>
+        <ng-template #setLazyAction>
+          <label nz-checkbox [(ngModel)]="character.lazy" (ngModelChange)="saveCharacter(character, roster)"></label>
+          Lazy
+          <i nz-icon nzType="info-circle" nzTheme="outline" nz-tooltip nzTooltipTitle="Only resets after 3 days"></i>
+        </ng-template>
+        <ng-template #setClassAction>
+          <nz-select class="class-selector"
+                     [(ngModel)]="character.class"
+                     (ngModelChange)="saveCharacter(character, roster)"
+                     nzShowSearch>
+            <nz-option *ngFor="let row of classes"
+                       [nzValue]="row.id" [nzLabel]="row.name"
+                       nzCustomContent>
+              <div class="class-row">
+                <img src="./assets/icons/classes/{{row.icon}}" alt="" class="class-icon">
+                <div>{{row.name}}</div>
+              </div>
+            </nz-option>
+          </nz-select>
+        </ng-template>
+        <ng-template #deleteAction>
+          <button nz-button nzDanger nz-popconfirm
+                  nzPopconfirmTitle="Are you sure?"
+                  (nzOnConfirm)="removeCharacter(character, roster)" nzShape="circle">
+            <i nz-icon nzType="delete" nzTheme="outline"></i>
+          </button>
+        </ng-template>
+      </nz-list-item>
+    </nz-list>
+  </nz-card>
+  <nz-divider></nz-divider>
+  <nz-card nzTitle="Add a character">
+    <form nz-form [formGroup]="form" (ngSubmit)="addCharacter(roster)">
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Please input a character name">
+          <nz-input-group nzPrefixIcon="user">
+            <input type="text" nz-input formControlName="name" placeholder="Name" />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Please input an ilvl">
+          <nz-input-group nzPrefixIcon="info">
+            <input nz-input formControlName="ilvl" placeholder="Item Level" type="number" />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Please input a class">
+          <nz-input-group nzAddOnBefore="Class">
+            <nz-select formControlName="class" class="class-selector" nzShowSearch>
+              <nz-option *ngFor="let row of classes"
+                         [nzValue]="row.id" [nzLabel]="row.name"
+                         nzCustomContent class="class-row">
+                <div class="class-row">
+                  <img src="./assets/icons/classes/{{row.icon}}" alt="" class="class-icon">
+                  <div>{{row.name}}</div>
+                </div>
+              </nz-option>
+            </nz-select>
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <label nz-checkbox formControlName="lazy">
+          Lazy
+          <i nz-icon nzType="info-circle" nzTheme="outline" nz-tooltip nzTooltipTitle="Only resets after 3 days"></i>
+        </label>
+      </nz-form-item>
+      <button nz-button [nzType]="'primary'" [disabled]="!form.valid">Add</button>
+    </form>
+  </nz-card>
+</ng-container> -->
+
+<ng-container *ngIf="roster$ | async as roster">
+  <div class="collapse collapse-arrow bg-neutral">
+    <input type="checkbox" id="collapse-roster" [checked]="true">
+    <div class="collapse-title text-2xl">Roster Configuration</div>
+    <div class="collapse-content">
+      <div class="flex justify-end">
+        <button nz-button
+                *ngIf="hasLocalstorageRoster"
+                nzType="primary"
+                nz-popconfirm
+                nzPopconfirmTitle="This will overwrite your current roster with previously saved local data and clear it from localstorage !"
+                (nzOnConfirm)="importFromLocalStorage(roster.$key)">
+          Import from LocalStorage
+        </button>
+        <div class="toast toast-top toast-start z-10">
+          <div class="alert alert-success">
+            <span>Roster copied to your clipboard.</span>
+          </div>
+        </div>
+        <div class="tooltip tooltip-info" data-tip="Export Roster">
+          <button (click)="exportRoster(roster)" class="btn btn-ghost btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+          </button>
+        </div>
+        <div class="tooltip tooltip-info" data-tip="Import Roster">
+          <button (click)="importRoster()" class="btn btn-ghost btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div cdkDropList [cdkDropListData]="roster.characters" (cdkDropListDropped)="drop(roster, $event)" class="flex flex-col gap-3">
+        <lostark-helper-character-card *ngFor="let character of roster.characters;trackBy: trackByCharacter; index as i" cdkDrag [cdkDragData]="character" [character]="character">
+          <div class="flex flex-col lg:flex-row gap-1">
+            <div class="flex flex-1 flex-col">
+              <div class="grid lg:grid-cols-3 gap-3">
+                <label class="form-control">
+                  <div class="label"><span class="label-text">Name</span></div>
+                  <input type="text" nz-input [ngModel]="character.name" [ngModelOptions]="{updateOn: 'blur'}" (ngModelChange)="saveCharacterName(character, roster, $event)" class="input">
+                </label>
+                <label class="form-control">
+                  <div class="label"><span class="label-text">Ilvl</span></div>
+                  <input type="number" [(ngModel)]="character.ilvl" [ngModelOptions]="{updateOn: 'blur'}" (ngModelChange)="saveCharacter(character, roster)" class="input">
+                </label>
+                <label class="form-control">
+                  <div class="label"><span class="label-text">Class</span></div>
+                  <select class="select select-bordered" [(ngModel)]="character.class" (ngModelChange)="saveCharacter(character, roster)">
+                    <option *ngFor="let row of classes" [value]="row.id" [label]="row.name"></option>
+                  </select>
+                </label>
+              </div>
+              <div class="w-full">
+                <label class="form-control">
+                  <div class="label"><span class="label-text">Note</span></div>
+                  <textarea
+                    class="textarea"
+                    placeholder="Custom note, you also can use it to set your BiFrost information or song of return location"
+                    cols="50"
+                    rows="3"
+                    [(ngModel)]="character.note"
+                    [ngModelOptions]="{updateOn: 'blur'}"
+                    (ngModelChange)="saveCharacter(character, roster)">
+                  </textarea>
+                </label>
+              </div>
+              <div class="divider"></div>
+              <div class="flex flex-col lg:flex-row gap-1 justify-between">
+                <div class="form-control">
+                  <label class="label cursor-pointer flex gap-1">
+                    <span class="label-text">Weekly Gold</span> 
+                    <div>
+                      <input type="checkbox" class="checkbox" [(ngModel)]="character.weeklyGold" (ngModelChange)="saveCharacter(character, roster)">
+                      <div class="tooltip tooltip-info" data-tip="Enable weekly gold for this character">
+                        <button class="btn btn-ghost btn-sm">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <div class="divider divider-horizontal mx-1"></div>
+                <div class="form-control">
+                  <label class="label cursor-pointer flex gap-1">
+                    <span class="label-text">Private</span> 
+                    <div>
+                      <input type="checkbox" class="checkbox" [(ngModel)]="character.isPrivate" (ngModelChange)="saveCharacter(character, roster)">
+                      <div class="tooltip tooltip-info" data-tip="Do not share this character with your friends">
+                        <button class="btn btn-ghost btn-sm">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <div class="divider divider-horizontal mx-1"></div>
+                <div class="form-control">
+                  <label class="label cursor-pointer flex gap-1">
+                    <span class="label-text">Hide</span> 
+                    <div>
+                      <input type="checkbox" class="checkbox" [(ngModel)]="character.isHide" (ngModelChange)="saveCharacter(character, roster)">
+                      <div class="tooltip tooltip-info" data-tip="Hide character from the checklist">
+                        <button class="btn btn-ghost btn-sm">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <div class="divider divider-horizontal mx-1"></div>
+                <div class="form-control">
+                  <label class="label cursor-pointer flex gap-1">
+                    <span class="label-text">Lazy</span> 
+                    <div>
+                      <input type="checkbox" class="checkbox" [(ngModel)]="character.lazy" (ngModelChange)="saveCharacter(character, roster)">
+                      <div class="tooltip tooltip-info" data-tip="Only resets after 3 days">
+                        <button class="btn btn-ghost btn-sm">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-center items-center px-4">
+              <button class="btn btn-error btn-outline" (click)="triggerModal(character.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </button>
+              <dialog id="cancel_confirm_{{character.id}}" class="modal">
+                <div class="modal-box">
+                  <button (click)="triggerModal(character.id, true)" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                  <h3 class="font-bold text-lg">Are you sure?</h3>
+                  <div class="mt-10 flex gap-3">
+                    <button class="btn btn-error btn-outline" (click)="removeCharacter(character, roster)">Confirm</button>
+                    <button (click)="triggerModal(character.id, true)" class="btn btn-outline">Cancel</button>
+                  </div>
+                </div>
+              </dialog>
+            </div>
+          </div>
+        </lostark-helper-character-card>
+      </div>
+      <div class="divider">Add a character</div>
+      <div class="flex items-center justify-center">
+        <form class="w-full max-w-screen-sm" [formGroup]="form" (ngSubmit)="addCharacter(roster)">
+          <label class="form-control">
+            <div class="label"><span class="label-text">Name</span></div>
+            <input class="input" type="text" formControlName="name" placeholder="Name" />
+          </label>
+          <label class="form-control">
+            <div class="label"><span class="label-text">Ilvl</span></div>
+            <input class="input" type="number" formControlName="ilvl" placeholder="Item Level" />
+          </label>
+          <label class="form-control">
+            <div class="label"><span class="label-text">Class</span></div>
+            <select class="select select-bordered" formControlName="class">
+              <option *ngFor="let row of classes" [value]="row.id" [label]="row.name"></option>
+            </select>
+          </label>
+          <div class="form-control">
+            <label class="label cursor-pointer flex justify-start gap-4">
+              <span class="label-text">Lazy</span> 
+              <div>
+                <input type="checkbox" class="checkbox" formControlName="lazy">
+                <div class="tooltip tooltip-info" data-tip="Only resets after 3 days">
+                  <button class="btn btn-ghost btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </label>
+          </div>
+          <button class="btn btn-block" [type]="'primary'" [disabled]="!form.valid">Add</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</ng-container>

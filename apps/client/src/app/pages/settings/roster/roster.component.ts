@@ -19,7 +19,6 @@ import { Character } from "../../../model/character/character";
 @Component({
   selector: "lostark-helper-roster",
   templateUrl: "./roster.component.html",
-  styleUrls: ["./roster.component.less"]
 })
 export class RosterComponent {
 
@@ -60,10 +59,10 @@ export class RosterComponent {
     const form = this.form.getRawValue();
     roster.characters.push({
       id: (roster.characters.map(c => c.id).sort().reverse()[0] || -1) + 1,
-      name: form.name,
-      ilvl: form.ilvl,
-      lazy: form.lazy,
-      class: form.class,
+      name: form.name ?? "",
+      ilvl: form.ilvl ?? 0,
+      lazy: form.lazy ?? false,
+      class: form.class ?? LostarkClass.BERSERKER,
       weeklyGold: roster.characters.length < 6,
       tickets: {
         EbonyCubeLevel1: 0,
@@ -141,7 +140,8 @@ export class RosterComponent {
       nzComponentParams: {
         placeholder: "Paste your exported roster here"
       },
-      nzFooter: null
+      nzFooter: null,
+      nzClassName: "card lg:card-side card-bordered bg-neutral text-neutral-content shadow-xl",
     }).afterClose
       .pipe(
         filter(json => {
@@ -185,5 +185,13 @@ export class RosterComponent {
       };
     });
     this.rosterService.updateOne(roster.$key, { characters: roster.characters });
+  }
+
+  triggerModal(id: number | undefined, close: boolean = false): void {
+    if (close) {
+      ( document.getElementById(`cancel_confirm_${id}`) as any ).close();
+    } else {
+      ( document.getElementById(`cancel_confirm_${id}`) as any ).showModal();
+    }
   }
 }
