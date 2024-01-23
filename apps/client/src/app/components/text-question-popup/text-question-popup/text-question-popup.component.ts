@@ -1,6 +1,13 @@
-import { Component, Input, OnInit } from "@angular/core";
-import { NzModalRef } from "ng-zorro-antd/modal";
+import { Component, Inject, OnInit } from "@angular/core";
 import { FormControl, Validators } from "@angular/forms";
+import { DIALOG_DATA, DialogRef } from "@angular/cdk/dialog";
+
+export interface DialogData {
+  title: string
+  baseText: string;
+  placeholder: string;
+  type: "textarea" | "input";
+}
 
 @Component({
   selector: "lostark-helper-text-question-popup",
@@ -8,19 +15,12 @@ import { FormControl, Validators } from "@angular/forms";
   styleUrls: ["./text-question-popup.component.less"]
 })
 export class TextQuestionPopupComponent implements OnInit {
-
-  @Input()
-  baseText = "";
-
-  @Input()
-  placeholder = "";
-
-  @Input()
-  type: "textarea" | "input" = "textarea";
-
   public control!: FormControl;
 
-  constructor(private modalRef: NzModalRef) {
+  constructor(
+    public modalRef: DialogRef,
+    @Inject(DIALOG_DATA) public data: DialogData
+  ) {
   }
 
   public submit(): void {
@@ -28,7 +28,7 @@ export class TextQuestionPopupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.control = new FormControl(this.baseText, Validators.required);
+    this.control = new FormControl(this.data.baseText, Validators.required);
   }
 
 }
