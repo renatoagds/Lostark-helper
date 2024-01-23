@@ -2,9 +2,6 @@ import { Component } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { TextQuestionPopupComponent } from "../../../components/text-question-popup/text-question-popup/text-question-popup.component";
 import { filter, first, switchMap, withLatestFrom } from "rxjs/operators";
-import { Clipboard } from "@angular/cdk/clipboard";
-import { NzMessageService } from "ng-zorro-antd/message";
-import { NzModalService } from "ng-zorro-antd/modal";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { RosterService } from "../../../core/database/services/roster.service";
 import { Roster } from "../../../model/roster";
@@ -15,6 +12,9 @@ import { EnergyService } from "../../../core/database/services/energy.service";
 import { combineLatest, of } from "rxjs";
 import { LostarkClass } from "../../../model/character/lostark-class";
 import { Character } from "../../../model/character/character";
+import { Dialog } from "@angular/cdk/dialog";
+import { Toast } from "../../../components/toast/toast/toast.service";
+import { ConfirmPopupComponent } from "../../../components/confirm-popup/confirm-popup/confirm-popup.component";
 
 @Component({
   selector: "lostark-helper-roster",
@@ -48,11 +48,10 @@ export class RosterComponent {
   constructor(private rosterService: RosterService,
               private auth: AuthService,
               private fb: FormBuilder,
-              private clipboard: Clipboard,
-              private message: NzMessageService,
+              private message: Toast,
               private completionService: CompletionService,
               private energyService: EnergyService,
-              private modal: NzModalService) {
+              private modal: Dialog) {
   }
 
   public addCharacter(roster: Roster): void {
@@ -78,8 +77,13 @@ export class RosterComponent {
   }
 
   public removeCharacter(character: Character, roster: Roster): void {
-    this.rosterService.updateOne(roster.$key, {
-      characters: arrayRemove(character)
+    const modalRef = this.modal.open(ConfirmPopupComponent)
+    modalRef.closed.subscribe(confirmed => {
+      if (confirmed) {
+        this.rosterService.updateOne(roster.$key, {
+          characters: arrayRemove(character)
+        });
+      }
     });
   }
 
@@ -128,48 +132,54 @@ export class RosterComponent {
     });
   }
 
-  exportRoster(roster: Roster): void {
-    this.clipboard.copy(JSON.stringify(roster));
+  exportRoster(): void {
     this.message.success("Roster copied to your clipboard");
   }
 
   importRoster(): void {
-    this.modal.create({
-      nzTitle: "Import roster",
-      nzContent: TextQuestionPopupComponent,
-      nzComponentParams: {
+    const dialogRef = this.modal.open(TextQuestionPopupComponent, {
+      data: {
+        title: "Import roster",
         placeholder: "Paste your exported roster here"
-      },
-      nzFooter: null,
-      nzClassName: "card lg:card-side card-bordered bg-neutral text-neutral-content shadow-xl",
-    }).afterClose
-      .pipe(
-        filter(json => {
-          const parsed = JSON.parse(json);
-          const hasCharacters = Array.isArray( parsed.characters ) && parsed.characters.length > 0;
-          return json && hasCharacters;
-        }),
-        withLatestFrom(this.auth.uid$),
-        switchMap(([rosterJson, uid]) => {
-          const parsed = JSON.parse(rosterJson);
-          return this.rosterService.updateOne(uid, { characters: parsed.characters });
-        })
-      )
-      .subscribe({
+      }
+    });
+
+    dialogRef.closed.pipe(
+      filter(( json ) => {
+        const parsed = JSON.parse(json as string ?? "[{}]");
+        const hasCharacters = Array.isArray( parsed.characters ) && parsed.characters.length > 0;
+        return ( json && hasCharacters ) as boolean;
+      }),
+      withLatestFrom(this.auth.uid$),
+      switchMap(([rosterJson, uid]) => {
+        const parsed = JSON.parse(rosterJson as string);
+        return this.rosterService.updateOne(uid, { characters: parsed.characters });
+      })
+    ).subscribe({
         next: () => {
           this.message.success("Roster imported");
         },
         error: e => {
           this.message.error((e as Error).message || e);
         }
-      });
+      })
   }
 
   importFromLocalStorage(uid: string): void {
-    const characters = JSON.parse(localStorage.getItem("roster") || "[]") as Character[];
-    this.rosterService.setOne(uid, { characters, trackedTasks: {}, showAllTasks: false });
-    localStorage.removeItem("roster");
-    this.hasLocalstorageRoster = false;
+    const modalRef = this.modal.open(ConfirmPopupComponent, {
+      data: {
+        description:"This will overwrite your current roster with previously saved local data and clear it from localstorage !"
+      }
+    });
+
+    modalRef.closed.subscribe(confirmed => {
+      if (confirmed) {
+        const characters = JSON.parse(localStorage.getItem("roster") || "[]") as Character[];
+        this.rosterService.setOne(uid, { characters, trackedTasks: {}, showAllTasks: false });
+        localStorage.removeItem("roster");
+        this.hasLocalstorageRoster = false;
+      }
+    });
   }
 
   trackByCharacter(index: number, character: Character): string {
@@ -185,13 +195,5 @@ export class RosterComponent {
       };
     });
     this.rosterService.updateOne(roster.$key, { characters: roster.characters });
-  }
-
-  triggerModal(id: number | undefined, close: boolean = false): void {
-    if (close) {
-      ( document.getElementById(`cancel_confirm_${id}`) as any ).close();
-    } else {
-      ( document.getElementById(`cancel_confirm_${id}`) as any ).showModal();
-    }
   }
 }
